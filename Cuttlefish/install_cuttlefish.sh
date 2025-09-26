@@ -63,12 +63,12 @@ mkdir -p ~/cf
 
 # Extract artifacts if they exist
 if [[ -f "../artifacts/*.tar.gz" ]] || [[ -f "../artifacts/*.tar" ]]; then
-    echo "Extracting tarball artifacts..."
+    echo "Extracting cvd host tools artifacts..."
     tar -xzf ../artifacts/*.tar.gz -C ~/cf/ 2>/dev/null || tar -xf ../artifacts/*.tar -C ~/cf/ 2>/dev/null || echo "No tarball found or extraction failed"
 fi
 
 if [[ -f "../artifacts/*.zip" ]]; then
-    echo "Extracting zip artifacts..."
+    echo "Extracting image artifacts..."
     unzip -o ../artifacts/*.zip -d ~/cf/ 2>/dev/null || echo "No zip file found or extraction failed"
 fi
 

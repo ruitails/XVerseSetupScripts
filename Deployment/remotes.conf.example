@@ -1,0 +1,18 @@
+# XVerse Remote Machines Configuration
+# Format: user@hostname:port:remote_path
+# 
+# Examples:
+# ubuntu@192.168.1.100:22:/home/ubuntu
+# admin@server1.example.com:2222:/opt/cuttlefish
+# user@10.0.0.50:22:/home/user/XVerse
+
+# Add your remote machines below:
+# ubuntu@192.168.1.100:22:/home/ubuntu
+# ubuntu@192.168.1.101:22:/home/ubuntu
+# ubuntu@192.168.1.102:22:/home/ubuntu
+
+# Instructions:
+# 1. Uncomment and modify the lines above with your actual remote machines
+# 2. Ensure SSH key authentication is set up for passwordless access
+# 3. Make sure the remote user has write permissions to the specified path
+# 4. Run: ./deploy_cuttlefish.sh remotes.conf

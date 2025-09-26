@@ -53,6 +53,69 @@ Cuttlefish/
     └── your_file.zip        # Your zip file
 ```
 
+### Deployment Script
+
+The `Deployment/deploy_cuttlefish.sh` script allows you to deploy the Cuttlefish installation script and artifacts to multiple remote Ubuntu machines simultaneously.
+
+#### Prerequisites
+
+- rsync installed (`sudo apt install rsync`)
+- SSH key authentication set up for passwordless access to remote machines
+- Remote machines running Ubuntu 22.04 LTS
+- Write permissions to the specified remote paths
+
+#### Usage
+
+1. **Configure remote machines**:
+   ```bash
+   cp Deployment/remotes.conf.example Deployment/remotes.conf
+   # Edit remotes.conf with your actual remote machine details
+   ```
+
+2. **Place artifacts** in the `Cuttlefish/artifacts/` directory
+
+3. **Run the deployment script**:
+   ```bash
+   cd Deployment
+   ./deploy_cuttlefish.sh [config_file]
+   ```
+
+#### Configuration Format
+
+The configuration file uses the format: `user@hostname:port:remote_path`
+
+Example entries:
+```
+ubuntu@192.168.1.100:22:/home/ubuntu
+admin@server1.example.com:2222:/opt/cuttlefish
+user@10.0.0.50:22:/home/user/XVerse
+```
+
+#### What the deployment script does
+
+1. **Validates configuration** - Checks config file and source files
+2. **Creates remote directories** - Sets up the directory structure on each remote
+3. **Syncs install script** - Copies the installation script to each remote
+4. **Syncs artifacts** - Copies all artifacts to each remote machine
+5. **Sets permissions** - Makes the install script executable on remotes
+6. **Provides summary** - Shows success/failure status for each remote
+
+#### Important Notes
+
+- The script runs sequentially for safety (one remote at a time)
+- SSH key authentication is required for passwordless access
+- The script will create the necessary directory structure on remote machines
+- After deployment, you can SSH to each remote and run the installation script
+
+#### Directory Structure
+
+```
+Deployment/
+├── deploy_cuttlefish.sh      # Main deployment script
+├── remotes.conf              # Configuration file (copy from example)
+└── remotes.conf.example      # Example configuration file
+```
+
 ## Contributing
 
 When adding new scripts, please:

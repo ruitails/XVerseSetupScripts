@@ -1,0 +1,33 @@
+# XVerse Scripts .gitignore
+
+# Artifacts directories - these contain large binary files that shouldn't be tracked
+Cuttlefish/artifacts/
+*/artifacts/
+
+# Configuration files with sensitive information (passwords, etc.)
+Deployment/remotes.conf
+*/remotes.conf
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Log files
+*.log

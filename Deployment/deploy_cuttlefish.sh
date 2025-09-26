@@ -94,12 +94,24 @@ validate_config() {
 check_source_files() {
     local missing_files=()
     
-    if [[ ! -f "Cuttlefish/install_cuttlefish.sh" ]]; then
+    # Determine the correct path to Cuttlefish directory
+    local cuttlefish_path
+    if [[ -f "Cuttlefish/install_cuttlefish.sh" ]]; then
+        cuttlefish_path="Cuttlefish"
+    elif [[ -f "../Cuttlefish/install_cuttlefish.sh" ]]; then
+        cuttlefish_path="../Cuttlefish"
+    else
         missing_files+=("Cuttlefish/install_cuttlefish.sh")
     fi
     
-    if [[ ! -d "Cuttlefish/artifacts" ]]; then
-        missing_files+=("Cuttlefish/artifacts/")
+    if [[ -n "$cuttlefish_path" ]]; then
+        if [[ ! -f "$cuttlefish_path/install_cuttlefish.sh" ]]; then
+            missing_files+=("$cuttlefish_path/install_cuttlefish.sh")
+        fi
+        
+        if [[ ! -d "$cuttlefish_path/artifacts" ]]; then
+            missing_files+=("$cuttlefish_path/artifacts/")
+        fi
     fi
     
     if [[ ${#missing_files[@]} -gt 0 ]]; then
@@ -108,11 +120,13 @@ check_source_files() {
             echo "  - $file"
         done
         echo ""
-        echo "Please ensure you're running this script from the project root directory."
+        echo "Please ensure you're running this script from the project root directory or Deployment directory."
         exit 1
     fi
     
     print_success "All source files found"
+    # Export the cuttlefish path for use in other functions
+    export CUTTLEFISH_PATH="$cuttlefish_path"
 }
 
 # Function to parse remote configuration
@@ -182,7 +196,7 @@ deploy_to_remote() {
     # Sync install script
     print_status "Syncing install script..."
     $rsync_cmd \
-        "Cuttlefish/install_cuttlefish.sh" \
+        "$CUTTLEFISH_PATH/install_cuttlefish.sh" \
         "$user@$host:$remote_path/Cuttlefish/" || {
         print_error "Failed to sync install script to $remote_id"
         return 1
@@ -191,7 +205,7 @@ deploy_to_remote() {
     # Sync artifacts directory
     print_status "Syncing artifacts..."
     $rsync_cmd \
-        "Cuttlefish/artifacts/" \
+        "$CUTTLEFISH_PATH/artifacts/" \
         "$user@$host:$remote_path/Cuttlefish/artifacts/" || {
         print_error "Failed to sync artifacts to $remote_id"
         return 1

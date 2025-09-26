@@ -2,22 +2,33 @@
 
 # XVerse Deployment Script
 # This script rsyncs Cuttlefish artifacts and install script to multiple remote machines
-# Usage: ./deploy_cuttlefish.sh [config_file] [--password]
+# Usage: ./deploy_cuttlefish.sh [config_file] [--password] [--test]
 
 set -e  # Exit on any error
 
 # Default configuration file
 CONFIG_FILE="${1:-remotes.conf}"
 
-# Check if password authentication is requested
+# Check for flags
 USE_PASSWORD=false
-if [[ "$2" == "--password" ]] || [[ "$1" == "--password" ]]; then
-    USE_PASSWORD=true
-    # Remove --password from arguments if it was the first argument
-    if [[ "$1" == "--password" ]]; then
-        CONFIG_FILE="${2:-remotes.conf}"
-    fi
-fi
+TEST_ONLY=false
+
+# Parse arguments
+for arg in "$@"; do
+    case $arg in
+        --password)
+            USE_PASSWORD=true
+            ;;
+        --test)
+            TEST_ONLY=true
+            ;;
+        *)
+            if [[ ! "$arg" =~ ^-- ]]; then
+                CONFIG_FILE="$arg"
+            fi
+            ;;
+    esac
+done
 
 # Colors for output
 RED='\033[0;31m'
@@ -164,6 +175,96 @@ parse_remote() {
     fi
 }
 
+# Function to test connection to a single remote
+test_connection() {
+    local user="$1"
+    local host="$2"
+    local port="$3"
+    local remote_path="$4"
+    local password="$5"
+    local remote_id="${user}@${host}:${port}"
+    
+    print_status "Testing connection to $remote_id..."
+    
+    # Set up SSH command based on authentication method
+    local ssh_cmd
+    if [[ "$USE_PASSWORD" == true ]]; then
+        ssh_cmd="sshpass -p '$password' ssh -p $port -o ConnectTimeout=10 -o StrictHostKeyChecking=no -o BatchMode=yes"
+    else
+        ssh_cmd="ssh -p $port -o ConnectTimeout=10 -o BatchMode=yes"
+    fi
+    
+    # Test basic connection
+    if $ssh_cmd "$user@$host" "echo 'Connection successful'" &>/dev/null; then
+        print_success "✓ SSH connection successful"
+        return 0
+    else
+        print_error "✗ SSH connection failed"
+        return 1
+    fi
+}
+
+# Function to test all connections
+test_all_connections() {
+    local success_count=0
+    local total_count=0
+    local failed_remotes=()
+    
+    print_status "Testing connections to all remotes..."
+    echo ""
+    
+    while IFS= read -r line; do
+        # Skip comments and empty lines
+        [[ $line =~ ^#.*$ ]] && continue
+        [[ -z "$line" ]] && continue
+        
+        total_count=$((total_count + 1))
+        
+        # Parse remote configuration
+        local parsed=$(parse_remote "$line")
+        if [[ $? -ne 0 ]]; then
+            failed_remotes+=("$line (parse error)")
+            continue
+        fi
+        
+        IFS='|' read -r user host port remote_path password <<< "$parsed"
+        
+        # Test this remote
+        if test_connection "$user" "$host" "$port" "$remote_path" "$password"; then
+            success_count=$((success_count + 1))
+        else
+            failed_remotes+=("$user@$host:$port")
+        fi
+        
+    done < "$CONFIG_FILE"
+    
+    # Print summary
+    echo "=========================================="
+    print_status "Connection Test Summary:"
+    echo "  Total remotes: $total_count"
+    echo "  Successful: $success_count"
+    echo "  Failed: ${#failed_remotes[@]}"
+    
+    if [[ ${#failed_remotes[@]} -gt 0 ]]; then
+        echo ""
+        print_error "Failed connections:"
+        for remote in "${failed_remotes[@]}"; do
+            echo "  - $remote"
+        done
+        echo ""
+        print_status "Troubleshooting tips:"
+        echo "  1. Check if SSH service is running on remote machines"
+        echo "  2. Verify firewall settings allow SSH connections"
+        echo "  3. Confirm username and password are correct"
+        echo "  4. Check if remote machines are accessible from your network"
+        echo "  5. Try manual SSH connection: ssh -p PORT user@host"
+        return 1
+    else
+        print_success "All connections successful!"
+        return 0
+    fi
+}
+
 # Function to deploy to a single remote
 deploy_to_remote() {
     local user="$1"
@@ -287,6 +388,24 @@ main() {
     # Pre-flight checks
     check_dependencies
     validate_config
+    
+    # If test mode, only test connections
+    if [[ "$TEST_ONLY" == true ]]; then
+        echo ""
+        print_status "Running in test mode - testing connections only"
+        echo ""
+        if test_all_connections; then
+            echo ""
+            print_success "All connections are working! You can now run deployment without --test flag."
+        else
+            echo ""
+            print_error "Some connections failed. Please fix the issues before deploying."
+            exit 1
+        fi
+        return 0
+    fi
+    
+    # Regular deployment mode
     check_source_files
     
     echo ""

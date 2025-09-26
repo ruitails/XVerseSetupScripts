@@ -1,10 +1,17 @@
 # XVerse Remote Machines Configuration
-# Format: user@hostname:port:remote_path
 # 
-# Examples:
+# SSH Key Authentication Format: user@hostname:port:remote_path
+# Password Authentication Format: user@hostname:port:remote_path:password
+# 
+# Examples (SSH Key Authentication):
 # ubuntu@192.168.1.100:22:/home/ubuntu
 # admin@server1.example.com:2222:/opt/cuttlefish
 # user@10.0.0.50:22:/home/user/XVerse
+#
+# Examples (Password Authentication):
+# ubuntu@192.168.1.100:22:/home/ubuntu:mypassword
+# admin@server1.example.com:2222:/opt/cuttlefish:secret123
+# user@10.0.0.50:22:/home/user/XVerse:password123
 
 # Add your remote machines below:
 # ubuntu@192.168.1.100:22:/home/ubuntu
@@ -13,6 +20,7 @@
 
 # Instructions:
 # 1. Uncomment and modify the lines above with your actual remote machines
-# 2. Ensure SSH key authentication is set up for passwordless access
-# 3. Make sure the remote user has write permissions to the specified path
-# 4. Run: ./deploy_cuttlefish.sh remotes.conf
+# 2. For SSH key authentication: Use format user@hostname:port:remote_path
+# 3. For password authentication: Use format user@hostname:port:remote_path:password
+# 4. Run with SSH keys: ./deploy_cuttlefish.sh remotes.conf
+# 5. Run with passwords: ./deploy_cuttlefish.sh remotes.conf --password

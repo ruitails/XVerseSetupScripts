@@ -60,7 +60,8 @@ The `Deployment/deploy_cuttlefish.sh` script allows you to deploy the Cuttlefish
 #### Prerequisites
 
 - rsync installed (`sudo apt install rsync`)
-- SSH key authentication set up for passwordless access to remote machines
+- For SSH key authentication: SSH key authentication set up for passwordless access to remote machines
+- For password authentication: sshpass installed (`sudo apt install sshpass`)
 - Remote machines running Ubuntu 22.04 LTS
 - Write permissions to the specified remote paths
 
@@ -77,18 +78,29 @@ The `Deployment/deploy_cuttlefish.sh` script allows you to deploy the Cuttlefish
 3. **Run the deployment script**:
    ```bash
    cd Deployment
+   # For SSH key authentication:
    ./deploy_cuttlefish.sh [config_file]
+   
+   # For password authentication:
+   ./deploy_cuttlefish.sh [config_file] --password
    ```
 
 #### Configuration Format
 
-The configuration file uses the format: `user@hostname:port:remote_path`
+The configuration file supports two authentication methods:
 
-Example entries:
+**SSH Key Authentication**: `user@hostname:port:remote_path`
 ```
 ubuntu@192.168.1.100:22:/home/ubuntu
 admin@server1.example.com:2222:/opt/cuttlefish
 user@10.0.0.50:22:/home/user/XVerse
+```
+
+**Password Authentication**: `user@hostname:port:remote_path:password`
+```
+ubuntu@192.168.1.100:22:/home/ubuntu:mypassword
+admin@server1.example.com:2222:/opt/cuttlefish:secret123
+user@10.0.0.50:22:/home/user/XVerse:password123
 ```
 
 #### What the deployment script does
@@ -103,9 +115,11 @@ user@10.0.0.50:22:/home/user/XVerse
 #### Important Notes
 
 - The script runs sequentially for safety (one remote at a time)
-- SSH key authentication is required for passwordless access
+- **SSH Key Authentication**: Requires SSH key authentication for passwordless access
+- **Password Authentication**: Requires sshpass package and passwords in config file
 - The script will create the necessary directory structure on remote machines
 - After deployment, you can SSH to each remote and run the installation script
+- Passwords are stored in plain text in the configuration file - ensure proper file permissions
 
 #### Directory Structure
 
